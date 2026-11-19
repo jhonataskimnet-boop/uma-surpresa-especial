@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para você ✨</title>
+    <!-- Fontes delicadas do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@500;600&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #fdf6f6;
+            --envelope-color: #f4dcd6;
+            --envelope-flap: #ebd0c9;
+            --envelope-shadow: rgba(180, 120, 120, 0.25);
+            --wax-color: #b84a55;
+            --paper-color: #fffdfa;
+            --text-color: #4a3b3c;
+            --accent-color: #b84a55;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #fff9f9 0%, #f7e6e6 100%);
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        /* Pétalas / Partículas flutuantes */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .petal {
+            position: absolute;
+            background: rgba(219, 138, 147, 0.35);
+            border-radius: 150% 0 150% 0;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Container do Envelope */
+        .stage {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 500px;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .hint-text {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #9e7b7d;
+            margin-bottom: 30px;
+            animation: pulse 2.5s infinite;
+            text-align: center;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-3px); }
+        }
+
+        .envelope-wrapper {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            background: var(--envelope-color);
+            border-radius: 6px;
+            box-shadow: 0 15px 35px var(--envelope-shadow);
+            cursor: pointer;
+            transition: transform 0.4s ease;
+        }
+
+        .envelope-wrapper:hover {
+            transform: scale(1.03);
+        }
+
+        /* Aba superior do envelope */
+        .flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-top: 115px solid var(--envelope-flap);
+            transform-origin: top;
+            transition: transform 0.7s ease-in-out;
+            z-index: 4;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.06));
+        }
+
+        /* Corpo frontal do envelope */
+        .pocket {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 150px solid #f7e3de;
+            border-right: 150px solid #f2d7d0;
+            border-bottom: 105px solid #eed0c8;
+            border-top: 95px solid transparent;
+            border-radius: 0 0 6px 6px;
+            z-index: 3;
+        }
+
+        /* Selo de cera */
+        .wax-seal {
+            position: absolute;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 48px;
+            background: radial-gradient(circle at 30% 30%, #d45d69, var(--wax-color));
+            border-radius: 50%;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(130, 35, 45, 0.4), inset 0 2px 4px rgba(255,255,255,0.3);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .wax-seal span {
+            color: #fce8ea;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        /* Animação de abertura */
+        .envelope-wrapper.open .flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        .envelope-wrapper.open .wax-seal {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.7);
+        }
+
+        /* Carta Aberta */
+        .letter-container {
+            display: none;
+            opacity: 0;
+            width: 100%;
+            max-width: 540px;
+            background: var(--paper-color);
+            padding: 45px 35px;
+            border-radius: 8px;
+            box-shadow: 0 15px 45px rgba(160, 110, 115, 0.18);
+            position: relative;
+            z-index: 20;
+            transform: translateY(25px);
+            transition: opacity 1.2s ease, transform 1.2s ease;
+            border: 1px solid rgba(220, 190, 190, 0.4);
+        }
+
+        .letter-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Linha decorativa interna */
+        .letter-container::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 1px solid rgba(184, 74, 85, 0.15);
+            pointer-events: none;
+            border-radius: 4px;
+        }
+
+        .letter-date {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            color: #a88a8c;
+            letter-spacing: 1.5px;
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .letter-salutation {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        .letter-body p {
+            font-size: 1.22rem;
+            line-height: 1.85;
+            margin-bottom: 18px;
+            color: #4a3b3c;
+            text-align: left;
+        }
+
+        /* Trecho da música em destaque */
+        .lyric-quote {
+            margin: 28px 0;
+            padding: 18px 20px;
+            background: rgba(244, 220, 214, 0.22);
+            border-left: 3px solid rgba(184, 74, 85, 0.55);
+            border-radius: 0 6px 6px 0;
+            font-style: italic;
+        }
+
+        .lyric-quote p {
+            font-size: 1.12rem;
+            line-height: 1.75;
+            margin-bottom: 12px;
+            color: #5c4547;
+        }
+
+        .lyric-quote p:last-child {
+            margin-bottom: 0;
+        }
+
+        .letter-signature {
+            margin-top: 30px;
+            text-align: right;
+        }
+
+        .letter-signature p {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: #7d6365;
+            margin-bottom: 4px;
+        }
+
+        .letter-signature .name {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.9rem;
+            color: var(--accent-color);
+        }
+
+        /* Controle de Música Flutuante */
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 30;
+            background: rgba(255, 253, 250, 0.9);
+            border: 1px solid rgba(184, 74, 85, 0.25);
+            color: var(--accent-color);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            backdrop-filter: blur(4px);
+        }
+
+        @media (max-width: 480px) {
+            .letter-container {
+                padding: 35px 24px;
+            }
+            .letter-body p {
+                font-size: 1.12rem;
+            }
+            .lyric-quote p {
+                font-size: 1.04rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pétalas suaves de fundo -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Áudio de fundo (Coloque o arquivo musica.mp3 na mesma pasta ou troque o link) -->
+    <audio id="bgMusic" loop>
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Botão discreto para pausar/tocar música -->
+    <button class="music-control" id="musicBtn" onclick="toggleMusic()">
+        <span id="musicIcon">🎵</span> <span id="musicText">Pausar música</span>
+    </button>
+
+    <!-- Etapa 1: O Envelope -->
+    <div class="stage" id="envelopeStage">
+        <p class="hint-text">Toque no selo para abrir</p>
+        <div class="envelope-wrapper" id="envelope" onclick="openLetter()">
+            <div class="flap"></div>
+            <div class="pocket"></div>
+            <div class="wax-seal">
+                <span>♥</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Etapa 2: A Carta -->
+    <div class="letter-container" id="letterContainer">
+        <!-- PERSONALIZE A DATA AQUI -->
+        <div class="letter-date">Para alguém muito especial</div>
+        
+        <!-- PERSONALIZE O NOME DELA AQUI -->
+        <h1 class="letter-salutation">Para você, [Nome dela]...</h1>
+        
+        <!-- PERSONALIZE A SUA MENSAGEM AQUI -->
+        <div class="letter-body">
+            <p>
+                Eu quis preparar este pequeno cantinho só para você, porque às vezes as palavras do dia a dia passam rápido demais e não dão conta de mostrar o tamanho do que eu sinto.
+            </p>
+            <p>
+                Mesmo já tendo te contado antes, senti vontade de dizer mais uma vez, com toda a calma e sinceridade do mundo: o que eu sinto por você continua aqui, vivo, leve e verdadeiro. Você tem um jeito único de iluminar os meus dias, e cada conversa ou momento ao seu lado tem um valor enorme para mim.
+            </p>
+            <p>
+                Não escrevo isso para te cobrar nada ou apressar qualquer passo — a sua paz, o seu sorriso e a nossa conexão sempre vão estar em primeiro lugar. Eu só queria que você soubesse, sem nenhuma dúvida, o quanto você é admirada, querida e especial na minha vida.
+            </p>
+            <p>
+                Independentemente de qualquer coisa, torço sempre pela sua felicidade e agradeço por ter você por perto.
+            </p>
+
+            <!-- Trecho especial da música -->
+            <div class="lyric-quote">
+                <p>
+                    Haja o que houver eu te amarei<br>
+                    E quero para sempre ao seu lado estar<br>
+                    Deixe de pensar em tudo que já ficou para trás
+                </p>
+                <p>
+                    Quero saber se é comigo que você vai sonhar<br>
+                    Se não tenho alguém em quem confiar<br>
+                    Já não encontro o caminho que me leve a você
+                </p>
+                <p>
+                    Quando enfim consegui confessar<br>
+                    Todo o meu sentimento e desejo de amar<br>
+                    Não sei o que me parou<br>
+                    Mas hoje eu vou lutar com todo o que sou
+                </p>
+                <p>
+                    Meu alegre coração palpita por um universo de esperança<br>
+                    Me dê a mão a magia nos espera<br>
+                    Vou te amar por toda minha vida<br>
+                    Vem comigo por este caminho<br>
+                    Me dê a mão pra fugir desta terrível escuridão
+                </p>
+            </div>
+        </div>
+
+        <!-- PERSONALIZE SUA ASSINATURA AQUI -->
+        <div class="letter-signature">
+            <p>Com todo o meu carinho,</p>
+            <div class="name">Jhonatas</div>
+        </div>
+    </div>
+
+    <script>
+        // Gera pétalas sutis na tela
+        function createPetals() {
+            const container = document.getElementById('particles');
+            const petalCount = 18;
+
+            for (let i = 0; i < petalCount; i++) {
+                const petal = document.createElement('div');
+                petal.classList.add('petal');
+                
+                const size = Math.random() * 10 + 8;
+                petal.style.width = `${size}px`;
+                petal.style.height = `${size}px`;
+                petal.style.left = `${Math.random() * 100}vw`;
+                petal.style.animationDuration = `${Math.random() * 8 + 8}s`;
+                petal.style.animationDelay = `${Math.random() * 5}s`;
+                
+                container.appendChild(petal);
+            }
+        }
+
+        createPetals();
+
+        const bgMusic = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicBtn');
+        const musicText = document.getElementById('musicText');
+        const musicIcon = document.getElementById('musicIcon');
+        let isPlaying = false;
+
+        function openLetter() {
+            const envelope = document.getElementById('envelope');
+            const stage = document.getElementById('envelopeStage');
+            const letter = document.getElementById('letterContainer');
+
+            // Evita cliques duplos
+            if (envelope.classList.contains('open')) return;
+
+            // Abre a aba do envelope
+            envelope.classList.add('open');
+
+            // Inicia a música a partir do trecho escolhido (~02:08 = 128s) com volume suave
+            bgMusic.currentTime = 128;
+            bgMusic.volume = 0.45;
+            bgMusic.play().then(() => {
+                isPlaying = true;
+                musicBtn.style.display = 'flex';
+            }).catch(err => {
+                console.log("Áudio aguardando interação:", err);
+            });
+
+            // Transição suave do envelope para a carta
+            setTimeout(() => {
+                stage.style.opacity = '0';
+                stage.style.transform = 'scale(0.95)';
+                
+                setTimeout(() => {
+                    stage.style.display = 'none';
+                    letter.style.display = 'block';
+                    
+                    // Pequeno delay para ativar a animação de entrada da carta
+                    requestAnimationFrame(() => {
+                        letter.classList.add('visible');
+                    });
+                }, 700);
+            }, 900);
+        }
+
+        function toggleMusic() {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicText.textContent = "Tocar música";
+                musicIcon.textContent = "🔇";
+            } else {
+                bgMusic.play();
+                musicText.textContent = "Pausar música";
+                musicIcon.textContent = "🎵";
+            }
+            isPlaying = !isPlaying;
+        }
+    </script>
+</body>
+</html>
