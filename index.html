@@ -110,6 +110,8 @@
             box-shadow: 0 15px 35px var(--envelope-shadow);
             cursor: pointer;
             transition: transform 0.4s ease;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         .envelope-wrapper:hover {
@@ -130,6 +132,7 @@
             transition: transform 0.7s ease-in-out;
             z-index: 4;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.06));
+            pointer-events: none;
         }
 
         /* Corpo frontal do envelope */
@@ -145,6 +148,7 @@
             border-top: 95px solid transparent;
             border-radius: 0 0 6px 6px;
             z-index: 3;
+            pointer-events: none;
         }
 
         /* Selo de cera */
@@ -163,12 +167,14 @@
             justify-content: center;
             box-shadow: 0 4px 10px rgba(130, 35, 45, 0.4), inset 0 2px 4px rgba(255,255,255,0.3);
             transition: opacity 0.4s ease, transform 0.4s ease;
+            cursor: pointer;
         }
 
         .wax-seal span {
             color: #fce8ea;
             font-size: 20px;
             line-height: 1;
+            pointer-events: none;
         }
 
         /* Animação de abertura */
@@ -180,6 +186,7 @@
         .envelope-wrapper.open .wax-seal {
             opacity: 0;
             transform: translateX(-50%) scale(0.7);
+            pointer-events: none;
         }
 
         /* Carta Aberta */
@@ -325,17 +332,17 @@
     </audio>
 
     <!-- Botão discreto para pausar/tocar música -->
-    <button class="music-control" id="musicBtn" onclick="toggleMusic()">
+    <button class="music-control" id="musicBtn" type="button">
         <span id="musicIcon">🎵</span> <span id="musicText">Pausar música</span>
     </button>
 
     <!-- Etapa 1: O Envelope -->
     <div class="stage" id="envelopeStage">
         <p class="hint-text">Toque no selo para abrir</p>
-        <div class="envelope-wrapper" id="envelope" onclick="openLetter()">
+        <div class="envelope-wrapper" id="envelope" role="button" tabindex="0" aria-label="Abrir carta">
             <div class="flap"></div>
             <div class="pocket"></div>
-            <div class="wax-seal">
+            <div class="wax-seal" id="waxSeal">
                 <span>♥</span>
             </div>
         </div>
@@ -421,11 +428,16 @@
 
         createPetals();
 
+        const envelope = document.getElementById('envelope');
+        const waxSeal = document.getElementById('waxSeal');
+        const stage = document.getElementById('envelopeStage');
+        const letter = document.getElementById('letterContainer');
         const bgMusic = document.getElementById('bgMusic');
         const musicBtn = document.getElementById('musicBtn');
         const musicText = document.getElementById('musicText');
         const musicIcon = document.getElementById('musicIcon');
         let isPlaying = false;
+        let isOpened = false;
 
         function setStartTimeIfPossible() {
             try {
@@ -444,3 +456,77 @@
                 setStartTimeIfPossible();
             }
         });
+
+        function openLetter(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            if (isOpened || envelope.classList.contains('open')) return;
+            isOpened = true;
+
+            // Abre a aba do envelope
+            envelope.classList.add('open');
+
+            // Inicia a música a partir do trecho escolhido (~02:08 = 128s) com volume suave
+            bgMusic.volume = 0.45;
+            setStartTimeIfPossible();
+            bgMusic.play().then(() => {
+                setStartTimeIfPossible();
+                isPlaying = true;
+                musicText.textContent = "Pausar música";
+                musicIcon.textContent = "🎵";
+                musicBtn.style.display = 'flex';
+            }).catch(err => {
+                console.log("Áudio aguardando interação ou arquivo indisponível:", err);
+                musicText.textContent = "Tocar música";
+                musicIcon.textContent = "🔇";
+                musicBtn.style.display = 'flex';
+            });
+
+            // Transição suave do envelope para a carta
+            setTimeout(() => {
+                stage.style.opacity = '0';
+                stage.style.transform = 'scale(0.95)';
+                
+                setTimeout(() => {
+                    stage.style.display = 'none';
+                    letter.style.display = 'block';
+                    
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            letter.classList.add('visible');
+                        });
+                    });
+                }, 700);
+            }, 900);
+        }
+
+        function toggleMusic() {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicText.textContent = "Tocar música";
+                musicIcon.textContent = "🔇";
+                isPlaying = false;
+            } else {
+                bgMusic.play().then(() => {
+                    musicText.textContent = "Pausar música";
+                    musicIcon.textContent = "🎵";
+                    isPlaying = true;
+                }).catch(err => {
+                    console.log("Erro ao reproduzir áudio:", err);
+                });
+            }
+        }
+
+        envelope.addEventListener('click', openLetter);
+        waxSeal.addEventListener('click', openLetter);
+        envelope.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openLetter(e);
+            }
+        });
+        musicBtn.addEventListener('click', toggleMusic);
+    </script>
+</body>
+</html>
